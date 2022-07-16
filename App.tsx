@@ -8,6 +8,10 @@ import WorkoutsScreen from "./src/screens/WorkoutsScreen";
 import NewRoutinesScreen from "./src/screens/NewRoutinesScreen";
 import AddNewExerciseModalScreen from "./src/screens/AddNewExerciseModalScreen";
 import NewWorkoutModalScreen from "./src/screens/NewWorkoutModalScreen";
+import { openDatabase } from "expo-sqlite";
+import { useEffect } from "react";
+
+const db = openDatabase("db-v2");
 
 const WorkoutsStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -102,13 +106,6 @@ function RoutinesStackScreen() {
                 accessibilityLabel="Go back to previous screen"
               />
             ),
-            headerRight: () => (
-              <Button
-                title="Save"
-                onPress={() => navigation.goBack()}
-                accessibilityLabel="Go back to previous screen"
-              />
-            ),
           })}
         />
       </WorkoutsStack.Group>
@@ -117,6 +114,29 @@ function RoutinesStackScreen() {
 }
 
 export default function App() {
+  useEffect(() => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(`
+        CREATE TABLE IF NOT EXISTS exercises (
+          id INTEGER PRIMARY KEY NOT NULL, name TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS routines (
+          id INTEGER PRIMARY KEY NOT NULL, name TEXT, exercises TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS workouts (
+          id INTEGER PRIMARY KEY NOT NULL, routineID INT, sets TEXT
+        );
+      `);
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+  }, []);
+
   return (
     <NavigationContainer>
       <Tab.Navigator>

@@ -1,34 +1,25 @@
-import { useState } from "react";
-import { Button, FlatList, Text, TextInput, View } from "react-native";
+import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  Button,
+  FlatList,
+  Text,
+  TextComponent,
+  TextInput,
+  View,
+} from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
+import { openDatabase } from "expo-sqlite";
+
+const db = openDatabase("db-v2");
 
 interface Exercise {
   id: number;
   title: string;
 }
 
-const initialExercises: Exercise[] = [
-  {
-    id: 1,
-    title: "Squats",
-  },
-  {
-    id: 2,
-    title: "Bench Press",
-  },
-  {
-    id: 3,
-    title: "Military Press",
-  },
-  {
-    id: 4,
-    title: "Deadlift",
-  },
-];
-
 function ListItem({
   id,
-  title,
+  name,
   addSelectedExercises,
   deleteSelectedExercises,
   deleteExercise,
@@ -55,10 +46,11 @@ function ListItem({
         <BouncyCheckbox
           fillColor="#000"
           size={17.5}
-          onPressIn={() => addSelectedExercises(id)}
-          onPressOut={() => deleteSelectedExercises(id)}
+          onPress={(e) => addSelectedExercises(e, id)}
+          // onPressIn={() => addSelectedExercises(id)}
+          // onPressOut={() => deleteSelectedExercises(id)}
         />
-        <Text>{title}</Text>
+        <Text>{name}</Text>
       </View>
       <View
         style={{
@@ -88,33 +80,94 @@ const renderItem = ({
 
 export default function AddNewExerciseModalScreen({ navigation }) {
   const [text, onChangeText] = useState("");
-  const [selectedExercises, setSelectedExercises] = useState([]);
-  const [exercises, setExercises] = useState(initialExercises);
+  const [exercises, setExercises] = useState([]);
+  const [selected, setSelected] = useState([]);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button
+          title="Save"
+          onPress={() => console.log(selected)}
+          accessibilityLabel="Go back to previous screen"
+        />
+      ),
+    });
+  }, [navigation]);
+
+  db.transaction((tx) => {
+    tx.executeSql("SELECT * FROM exercises", [], (_, { rows }) =>
+      setExercises(rows._array)
+    );
+  });
 
   const addExercise = () => {
-    setExercises([...exercises, { id: Date.now(), title: text }]);
-    onChangeText("");
+    db.transaction((tx) => {
+      tx.executeSql(
+        `INSERT INTO exercises (name) VALUES (?)`,
+        [text],
+        (tx, res) => {
+          console.log(res);
+        }
+      );
+
+      tx.executeSql(
+        `SELECT * FROM exercises`,
+        [],
+        (err, res) => {
+          setExercises(res.rows._array);
+        },
+        (err) => console.log(err)
+      );
+    });
+
+    // setExercises([...exercises, { id: Date.now(), title: text }]);
   };
 
-  const addSelectedExercises = (id: number) => {
-    setSelectedExercises([
-      ...selectedExercises,
-      exercises.find((exercise) => exercise.id === id),
-    ]);
+  const addSelectedExercises = (action: boolean, id: number) => {
+    if (action) {
+      setSelected([...selected, id]);
+      return;
+    }
 
-    console.log(selectedExercises);
+    const set = new Set(selected);
+    set.delete(id);
+    setSelected([...set]);
   };
 
   const deleteSelectedExercises = (id: number) => {
-    setSelectedExercises(
-      selectedExercises.filter((exercise) => exercise.id !== id)
-    );
+    const set = new Set(selected);
+    set.delete(id);
 
-    console.log(selectedExercises);
+    setSelected([...set]);
+    // setSelectedExercises(
+    //   selectedExercises.filter((exercise) => exercise.id !== id)
+    // );
   };
 
-  const deleteExercise = (id: number) =>
-    setExercises(exercises.filter((exercise) => exercise.id !== id));
+  const deleteExercise = (id: number) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `DELETE FROM exercises WHERE id = ?`,
+        [id],
+        (tx, res) => {
+          console.log(res);
+        },
+        (err) => console.log(err)
+      );
+
+      console.log(id);
+
+      tx.executeSql(
+        `SELECT * FROM exercises`,
+        [],
+        (err, res) => {
+          setExercises(res.rows._array);
+        },
+        (err) => console.log(err)
+      );
+    });
+  };
 
   return (
     <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
