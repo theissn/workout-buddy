@@ -1,38 +1,117 @@
+import { Button, Text } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Button, StyleSheet, Text, View } from "react-native";
 import NewWorkoutScreen from "./src/screens/NewWorkoutScreen";
+import RoutinesScreen from "./src/screens/RoutinesScreen";
 import WorkoutsScreen from "./src/screens/WorkoutsScreen";
+import NewRoutinesScreen from "./src/screens/NewRoutinesScreen";
+import AddNewExerciseModalScreen from "./src/screens/AddNewExerciseModalScreen";
+import NewWorkoutModalScreen from "./src/screens/NewWorkoutModalScreen";
 
-function RoutinesScreen({ navigation }) {
-  return (
-    <View style={styles.container}>
-      <Text>Coming soon to a theater near you...</Text>
-    </View>
-  );
-}
-
-const Stack = createNativeStackNavigator();
 const WorkoutsStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function WorkoutsStackScreen() {
   return (
     <WorkoutsStack.Navigator screenOptions={{ headerShown: true }}>
-      <WorkoutsStack.Screen
-        name="Workouts"
-        component={WorkoutsScreen}
-        options={({ navigation, route }) => ({
-          headerRight: () => (
-            <Button
-              title="➕"
-              onPress={() => navigation.navigate("NewWorkout")}
-            />
-          ),
-        })}
-      />
-      <WorkoutsStack.Screen name="NewWorkout" component={NewWorkoutScreen} />
+      <WorkoutsStack.Group>
+        <WorkoutsStack.Screen
+          name="Workouts"
+          component={WorkoutsScreen}
+          options={({ navigation, route }) => ({
+            headerRight: () => (
+              <Button
+                title="New"
+                onPress={() => navigation.navigate("NewWorkoutModal")}
+                accessibilityLabel="Start new workout"
+              />
+            ),
+          })}
+        />
+        <WorkoutsStack.Screen
+          name="NewWorkout"
+          component={NewWorkoutScreen}
+          options={({ navigation, route }) => ({
+            title: "X Workout",
+          })}
+        />
+      </WorkoutsStack.Group>
+      <WorkoutsStack.Group screenOptions={{ presentation: "modal" }}>
+        <WorkoutsStack.Screen
+          name="NewWorkoutModal"
+          component={NewWorkoutModalScreen}
+          options={({ navigation, route }) => ({
+            title: "Start New Workout",
+            headerLeft: () => (
+              <Button
+                title="Close"
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Go back to previous screen"
+              />
+            ),
+          })}
+        />
+      </WorkoutsStack.Group>
+    </WorkoutsStack.Navigator>
+  );
+}
+
+function RoutinesStackScreen() {
+  return (
+    <WorkoutsStack.Navigator screenOptions={{ headerShown: true }}>
+      <WorkoutsStack.Group>
+        <WorkoutsStack.Screen
+          name="Routines"
+          component={RoutinesScreen}
+          options={({ navigation, route }) => ({
+            headerRight: () => (
+              <Button
+                title="New"
+                onPress={() => navigation.navigate("NewRoutine")}
+                accessibilityLabel="Create new routine"
+              />
+            ),
+          })}
+        />
+        <WorkoutsStack.Screen
+          name="NewRoutine"
+          component={NewRoutinesScreen}
+          options={({ navigation, route }) => ({
+            title: "New Routine",
+            headerRight: () => (
+              <Button
+                title="Save"
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Go back to previous screen"
+              />
+            ),
+          })}
+        />
+      </WorkoutsStack.Group>
+      <WorkoutsStack.Group screenOptions={{ presentation: "modal" }}>
+        <WorkoutsStack.Screen
+          name="AddNewExerciseModal"
+          component={AddNewExerciseModalScreen}
+          options={({ navigation, route }) => ({
+            title: "Add New Exercise",
+            headerLeft: () => (
+              <Button
+                title="Close"
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Go back to previous screen"
+              />
+            ),
+            headerRight: () => (
+              <Button
+                title="Save"
+                onPress={() => navigation.goBack()}
+                accessibilityLabel="Go back to previous screen"
+              />
+            ),
+          })}
+        />
+      </WorkoutsStack.Group>
     </WorkoutsStack.Navigator>
   );
 }
@@ -44,19 +123,30 @@ export default function App() {
         <Tab.Screen
           name="WorkoutsTab"
           component={WorkoutsStackScreen}
-          options={{ headerShown: false }}
+          options={{
+            headerShown: false,
+            tabBarIcon: () => <Text>🏋️‍♀️</Text>,
+            title: "Workouts",
+          }}
         />
-        <Tab.Screen name="Routines" component={RoutinesScreen} />
+        <Tab.Screen
+          name="RoutinesTab"
+          component={RoutinesStackScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: () => <Text>✍️</Text>,
+            title: "Routines",
+          }}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={RoutinesScreen}
+          options={{
+            headerShown: true,
+            tabBarIcon: () => <Text>⚙️</Text>,
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
