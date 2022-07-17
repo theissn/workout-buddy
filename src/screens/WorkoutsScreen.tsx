@@ -1,6 +1,13 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableHighlight, Button } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableHighlight,
+  Button,
+  Alert,
+} from "react-native";
 import { db } from "../helpers/db";
 
 interface Workout {
@@ -23,37 +30,41 @@ function getWorkouts(
   });
 }
 
-function ListItem({ item: { id, name, startedAt, routineId }, editWorkout }) {
+function ListItem({
+  item: { id, name, startedAt, routineId },
+  editWorkout,
+  deleteWorkout,
+}) {
   return (
-    <TouchableHighlight onPress={() => editWorkout(routineId, id)}>
+    <View
+      style={{
+        padding: 20,
+        borderColor: "#000",
+        borderBottomWidth: 0.25,
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fefefe",
+      }}
+    >
       <View
         style={{
-          padding: 20,
-          borderColor: "#000",
-          borderBottomWidth: 0.25,
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "#fefefe",
+          flex: 4,
         }}
       >
-        <View
-          style={{
-            flex: 2,
-          }}
-        >
-          <Text>{name}</Text>
-          <Text style={{ fontSize: 12, paddingTop: 5 }}>{startedAt}</Text>
-        </View>
-        <View
-          style={{
-            flex: 1,
-            alignItems: "flex-end",
-          }}
-        >
-          <Text>✍️</Text>
-        </View>
+        <Text>{name}</Text>
+        <Text style={{ fontSize: 12, paddingTop: 5 }}>{startedAt}</Text>
       </View>
-    </TouchableHighlight>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "flex-end",
+          flexDirection: "row",
+        }}
+      >
+        <Button onPress={() => editWorkout(routineId, id)} title="✍️" />
+        <Button onPress={() => deleteWorkout(id)} title="🗑" />
+      </View>
+    </View>
   );
 }
 
@@ -86,11 +97,37 @@ export default function WorkoutsScreen({ navigation, route }) {
     });
   }
 
+  function deleteWorkout(id: number) {
+    Alert.alert(
+      "Delete Workout",
+      "Are you sure you want to delete this workout?",
+      [
+        { text: "Cancel" },
+        {
+          text: "Delete",
+          onPress: () => {
+            db.transaction((tx) => {
+              tx.executeSql("DELETE FROM workouts WHERE id = ?", [id]);
+              tx.executeSql(
+                "DELETE FROM workouts_exercises WHERE workoutId = ?",
+                [id]
+              );
+            });
+
+            getWorkouts(setWorkouts);
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <View>
       <FlatList
         data={workouts}
-        renderItem={({ item }) => renderItem({ item, editWorkout })}
+        renderItem={({ item }) =>
+          renderItem({ item, editWorkout, deleteWorkout })
+        }
         keyExtractor={(item) => item.id}
       />
     </View>
