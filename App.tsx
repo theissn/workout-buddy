@@ -8,7 +8,6 @@ import WorkoutsScreen from "./src/screens/WorkoutsScreen";
 import NewRoutinesScreen from "./src/screens/NewRoutinesScreen";
 import AddNewExerciseModalScreen from "./src/screens/AddNewExerciseModalScreen";
 import NewWorkoutModalScreen from "./src/screens/NewWorkoutModalScreen";
-import { openDatabase } from "expo-sqlite";
 import { useEffect } from "react";
 import { db } from "./src/helpers/db";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -112,7 +111,7 @@ export default function App() {
       (tx) => {
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS exercises (
-            id INTEGER PRIMARY KEY NOT NULL, 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
             name TEXT
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
             updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -121,7 +120,7 @@ export default function App() {
 
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS routines (
-            id INTEGER PRIMARY KEY NOT NULL, 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
             name TEXT,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
             updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -130,7 +129,7 @@ export default function App() {
 
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS routine_exercises (
-            id INTEGER PRIMARY KEY NOT NULL, 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
             routineId INT,
             exerciseId INT
           );
@@ -138,7 +137,7 @@ export default function App() {
 
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS workouts (
-            id INTEGER PRIMARY KEY NOT NULL, 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
             routineId INT,
             startedAt DATETIME,
             endedAt DATETIME,
@@ -149,7 +148,7 @@ export default function App() {
 
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS workouts_exercises (
-            id INTEGER PRIMARY KEY NOT NULL, 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
             workoutId INT,
             exerciseId INT,
             weight TEXT,

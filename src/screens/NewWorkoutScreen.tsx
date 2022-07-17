@@ -104,7 +104,7 @@ export default function NewWorkoutScreen({ route, navigation }) {
 
             navigation.navigate({
               name: "Workouts",
-              params: { update: 1 },
+              params: { update: Math.random().toFixed(10) },
               merge: true,
             });
           }}
@@ -133,11 +133,10 @@ export default function NewWorkoutScreen({ route, navigation }) {
             `SELECT e.* FROM routine_exercises r LEFT JOIN exercises e ON e.id = r.exerciseId WHERE r.routineId = ?`,
             [id],
             (_, { rows: { _array } }) => {
-              setExercises(_array);
-
               if (!workoutId)
                 setSets(_array.map((e) => [{ weight: "0", reps: "0" }]));
 
+              setExercises(_array);
               setLoading(false);
             }
           );
@@ -154,11 +153,17 @@ export default function NewWorkoutScreen({ route, navigation }) {
         "SELECT * FROM workouts_exercises WHERE workoutId = ?",
         [workoutId],
         (_, { rows: { _array } }) => {
-          setSets(groupBy(_array, "exerciseId"));
+          if (_array.length > 0) setSets(groupBy(_array, "exerciseId"));
         }
       );
     });
   }, [workoutId]);
+
+  useEffect(() => {
+    if (sets.length > 0) return;
+
+    setSets(exercises.map((e) => [{ weight: "0", reps: "0" }]));
+  }, [exercises]);
 
   if (isLoading || !routine || !exercises) {
     return (

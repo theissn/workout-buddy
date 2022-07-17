@@ -21,7 +21,7 @@ function getWorkouts(
 ) {
   db.transaction((tx) => {
     tx.executeSql(
-      "SELECT * FROM workouts w LEFT JOIN routines r ON r.id = w.routineId",
+      "SELECT w.*, r.name FROM workouts w LEFT JOIN routines r ON r.id = w.routineId",
       [],
       (_, { rows: { _array } }) => {
         setExercises(_array);
@@ -73,7 +73,7 @@ const renderItem = (props) => <ListItem {...props} />;
 export default function WorkoutsScreen({ navigation, route }) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
 
-  const { update = false } = route.params ?? {};
+  const { update } = route.params ?? {};
 
   useEffect(() => {
     getWorkouts(setWorkouts);
