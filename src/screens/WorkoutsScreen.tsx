@@ -1,13 +1,5 @@
-import { format, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableHighlight,
-  Button,
-  Alert,
-} from "react-native";
+import { View, Text, FlatList, Button, Alert } from "react-native";
 import { db } from "../helpers/db";
 
 interface Workout {
@@ -81,7 +73,11 @@ export default function WorkoutsScreen({ navigation, route }) {
 
   if (workouts.length === 0) {
     return (
-      <View style={{ padding: 20 }}>
+      <View
+        style={{
+          padding: 20,
+        }}
+      >
         <Text>
           Start your first workout by clicking the new workout button in the top
           right hand corner
@@ -122,7 +118,12 @@ export default function WorkoutsScreen({ navigation, route }) {
   }
 
   return (
-    <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
+    <View
+      style={{
+        paddingHorizontal: 15,
+        paddingVertical: 25,
+      }}
+    >
       <FlatList
         data={workouts}
         renderItem={({ item }) =>
