@@ -139,12 +139,21 @@ export default function App() {
         tx.executeSql(`
           CREATE TABLE IF NOT EXISTS workouts (
             id INTEGER PRIMARY KEY NOT NULL, 
-            routineId INT, 
-            sets TEXT,
+            routineId INT,
             startedAt DATETIME,
             endedAt DATETIME,
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
             updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
+
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS workouts_exercises (
+            id INTEGER PRIMARY KEY NOT NULL, 
+            workoutId INT,
+            exerciseId INT,
+            weight TEXT,
+            reps TEXT
           );
         `);
       },
@@ -171,7 +180,7 @@ export default function App() {
           component={RoutinesStackScreen}
           options={{
             headerShown: false,
-            tabBarIcon: () => <Text>✍️</Text>,
+            tabBarIcon: () => <Text>📕</Text>,
             title: "Routines",
           }}
         />

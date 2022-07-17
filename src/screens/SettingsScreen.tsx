@@ -1,15 +1,13 @@
 import { openDatabase } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  BackHandler,
   Text,
   TouchableHighlight,
   View,
 } from "react-native";
 import { db } from "../helpers/db";
-import { styles } from "../styles/global";
 
 export default function SettingsScreen({ navigation, route }) {
   const [isLoading, setLoading] = useState(false);
@@ -33,8 +31,6 @@ export default function SettingsScreen({ navigation, route }) {
         },
       },
     ]);
-
-    // BackHandler.exitApp();
   };
 
   if (isLoading) {

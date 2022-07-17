@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useEffect, useState } from "react";
 import { View, Text, FlatList, TouchableHighlight, Button } from "react-native";
 import { db } from "../helpers/db";
@@ -13,15 +13,19 @@ function getWorkouts(
   setExercises: React.Dispatch<React.SetStateAction<Workout[]>>
 ) {
   db.transaction((tx) => {
-    tx.executeSql("SELECT * FROM workouts", [], (_, { rows: { _array } }) => {
-      setExercises(_array);
-    });
+    tx.executeSql(
+      "SELECT * FROM workouts w LEFT JOIN routines r ON r.id = w.routineId",
+      [],
+      (_, { rows: { _array } }) => {
+        setExercises(_array);
+      }
+    );
   });
 }
 
-function ListItem({ id, title, date }) {
+function ListItem({ item: { id, name, startedAt, routineId }, editWorkout }) {
   return (
-    <TouchableHighlight onPress={() => console.log(id)}>
+    <TouchableHighlight onPress={() => editWorkout(routineId, id)}>
       <View
         style={{
           padding: 20,
@@ -34,12 +38,11 @@ function ListItem({ id, title, date }) {
       >
         <View
           style={{
-            flex: 1,
+            flex: 2,
           }}
         >
-          <Text>
-            {date} - {title}
-          </Text>
+          <Text>{name}</Text>
+          <Text style={{ fontSize: 12, paddingTop: 5 }}>{startedAt}</Text>
         </View>
         <View
           style={{
@@ -47,21 +50,23 @@ function ListItem({ id, title, date }) {
             alignItems: "flex-end",
           }}
         >
-          <Text>➡️</Text>
+          <Text>✍️</Text>
         </View>
       </View>
     </TouchableHighlight>
   );
 }
 
-const renderItem = ({ item }: any) => <ListItem {...item} />;
+const renderItem = (props) => <ListItem {...props} />;
 
-export default function WorkoutsScreen({ navigation }) {
+export default function WorkoutsScreen({ navigation, route }) {
   const [workouts, setWorkouts] = useState<Workout[]>([]);
+
+  const { update = false } = route.params ?? {};
 
   useEffect(() => {
     getWorkouts(setWorkouts);
-  }, []);
+  }, [update]);
 
   if (workouts.length === 0) {
     return (
@@ -74,11 +79,18 @@ export default function WorkoutsScreen({ navigation }) {
     );
   }
 
+  function editWorkout(routineId: number, workoutId: number) {
+    navigation.navigate("NewWorkout", {
+      id: routineId,
+      workoutId,
+    });
+  }
+
   return (
     <View>
       <FlatList
         data={workouts}
-        renderItem={renderItem}
+        renderItem={({ item }) => renderItem({ item, editWorkout })}
         keyExtractor={(item) => item.id}
       />
     </View>

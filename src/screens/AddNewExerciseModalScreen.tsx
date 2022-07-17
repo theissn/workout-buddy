@@ -48,7 +48,7 @@ function ListItem({ id, name, updateSelectedExercises, deleteExercise }) {
       >
         <BouncyCheckbox
           fillColor="#000"
-          size={17.5}
+          size={20}
           onPress={(e) => updateSelectedExercises(e, id)}
         />
         <Text>{name}</Text>
@@ -59,7 +59,7 @@ function ListItem({ id, name, updateSelectedExercises, deleteExercise }) {
           alignItems: "flex-end",
         }}
       >
-        <Button onPress={() => deleteExercise(id)} title="🚮" />
+        <Button onPress={() => deleteExercise(id)} title="🗑" />
       </View>
     </View>
   );
@@ -110,6 +110,8 @@ export default function AddNewExerciseModalScreen({ navigation }) {
     db.transaction((tx) => {
       tx.executeSql(`INSERT INTO exercises (name) VALUES (?)`, [text]);
     });
+
+    onChangeText("");
 
     getExercises(setExercises);
   };

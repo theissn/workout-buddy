@@ -7,20 +7,15 @@ import {
   View,
 } from "react-native";
 
-export default function SetTracker() {
-  const [sets, setSets] = useState([
-    {
-      weight: "0",
-      reps: "0",
-    },
-  ]);
+// Array<{weight: string; reps: string}>
 
+export default function SetTracker({ sets, handleSetUpdate }) {
   function addSet() {
-    setSets([...sets, sets[sets.length - 1]]);
+    handleSetUpdate([...sets, sets[sets.length - 1]]);
   }
 
   function deleteSet(index: number) {
-    setSets(sets.filter((_, i) => i !== index));
+    handleSetUpdate(sets.filter((_, i) => i !== index));
   }
 
   function updateValue(index: number, value: string, key: string) {
@@ -29,14 +24,14 @@ export default function SetTracker() {
     );
 
     map.set(index, { ...map.get(index), [key]: value });
-
-    setSets([...map.values()]);
+    handleSetUpdate([...map.values()]);
   }
 
   return (
     <>
       {sets.map((set, index) => (
         <View
+          key={index}
           style={{
             backgroundColor: "#fff",
             padding: 10,
@@ -79,7 +74,7 @@ export default function SetTracker() {
             }}
           >
             {index !== 0 && (
-              <Button onPress={() => deleteSet(index)} title="❌" />
+              <Button onPress={() => deleteSet(index)} title="🗑" />
             )}
           </View>
         </View>
@@ -92,7 +87,7 @@ export default function SetTracker() {
           padding: 10,
         }}
       >
-        <Text style={{ color: "#fff" }}>Add Set</Text>
+        <Text style={{ color: "#fff" }}>+ Add Set</Text>
       </TouchableHighlight>
     </>
   );

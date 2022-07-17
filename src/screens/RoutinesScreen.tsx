@@ -38,7 +38,7 @@ function ListItem({ item: { name, id }, editRoutine, deleteRoutine }) {
         }}
       >
         <View style={{ flexDirection: "row" }}>
-          <Button onPress={() => editRoutine(id)} title="✏️" />
+          <Button onPress={() => editRoutine(id)} title="✍️" />
           <Button onPress={() => deleteRoutine(id)} title="🗑" />
         </View>
       </View>

@@ -14,14 +14,84 @@ import SetTracker from "../components/workouts/SetTracker";
 import { db } from "../helpers/db";
 import { styles } from "../styles/global";
 
+function groupBy(array, key) {
+  return array
+    .reduce((result, obj) => {
+      (result[obj[key]] = result[obj[key]] || []).push(obj);
+      return result;
+    }, [])
+    .filter(Boolean);
+}
+
 export default function NewWorkoutScreen({ route, navigation }) {
   const [isLoading, setLoading] = useState(true);
   const [routine, setRoutine] = useState();
   const [exercises, setExercises] = useState([]);
 
+  const [sets, setSets] = useState([]);
+
   const startedAt = new Date();
 
-  const { id } = route.params ?? {};
+  const { id, workoutId } = route.params ?? {};
+
+  function saveWorkout() {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `INSERT INTO workouts (routineId, startedAt, endedAt) VALUES (?, ?, ?)`,
+        [
+          routine.id,
+          format(startedAt, "yyyy-MM-dd HH:mm:ss"),
+          format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        ],
+        (_, { insertId }) => {
+          for (const [index, exerciseSets] of sets.entries()) {
+            exerciseSets.forEach((set) => {
+              tx.executeSql(
+                `INSERT INTO workouts_exercises (workoutId, exerciseId, weight, reps) VALUES (?, ?, ?, ?)`,
+                [
+                  insertId,
+                  exercises.find((_, idx) => idx === index)?.id,
+                  set.weight,
+                  set.reps,
+                ]
+              );
+            });
+          }
+        }
+      );
+    });
+  }
+
+  function updateWorkout() {
+    db.transaction((tx) => {
+      tx.executeSql(`DELETE FROM workouts_exercises WHERE workoutId = ?`, [
+        workoutId,
+      ]);
+
+      for (const [index, exerciseSets] of sets.entries()) {
+        exerciseSets.forEach((set) => {
+          tx.executeSql(
+            `INSERT INTO workouts_exercises (workoutId, exerciseId, weight, reps) VALUES (?, ?, ?, ?)`,
+            [
+              workoutId,
+              exercises.find((_, idx) => idx === index)?.id,
+              set.weight,
+              set.reps,
+            ]
+          );
+        });
+      }
+    });
+  }
+
+  function handleSetUpdate(index: number, newSets) {
+    const map = new Map<number, Array<{ weight: string; reps: string }>>(
+      sets.map((set, index) => [index, set])
+    );
+
+    map.set(index, newSets);
+    setSets([...map.values()]);
+  }
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -30,7 +100,8 @@ export default function NewWorkoutScreen({ route, navigation }) {
         <Button
           title="Save"
           onPress={() => {
-            // TODO: save workout
+            workoutId ? updateWorkout() : saveWorkout();
+
             navigation.navigate({
               name: "Workouts",
               params: { update: 1 },
@@ -40,7 +111,7 @@ export default function NewWorkoutScreen({ route, navigation }) {
         />
       ),
     });
-  }, [navigation, routine]);
+  }, [navigation, routine, sets]);
 
   useEffect(() => {
     if (id) return;
@@ -63,6 +134,10 @@ export default function NewWorkoutScreen({ route, navigation }) {
             [id],
             (_, { rows: { _array } }) => {
               setExercises(_array);
+
+              if (!workoutId)
+                setSets(_array.map((e) => [{ weight: "0", reps: "0" }]));
+
               setLoading(false);
             }
           );
@@ -70,6 +145,20 @@ export default function NewWorkoutScreen({ route, navigation }) {
       );
     });
   }, [id]);
+
+  useEffect(() => {
+    if (!workoutId) return;
+
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM workouts_exercises WHERE workoutId = ?",
+        [workoutId],
+        (_, { rows: { _array } }) => {
+          setSets(groupBy(_array, "exerciseId"));
+        }
+      );
+    });
+  }, [workoutId]);
 
   if (isLoading || !routine || !exercises) {
     return (
@@ -94,12 +183,17 @@ export default function NewWorkoutScreen({ route, navigation }) {
         <Text style={{ fontSize: 20, paddingTop: 10, fontWeight: "300" }}>
           {format(startedAt, "do MMM, H:mm")}
         </Text>
-        {exercises.map((exercise) => (
+        {exercises.map((exercise, index) => (
           <View key={exercise.id}>
             <View style={{ paddingTop: 30 }} />
             <Text style={{ fontSize: 20 }}>{exercise.name}</Text>
             <View style={{ paddingTop: 10 }} />
-            <SetTracker />
+            {sets[index] && (
+              <SetTracker
+                sets={sets[index]}
+                handleSetUpdate={(sets) => handleSetUpdate(index, sets)}
+              />
+            )}
           </View>
         ))}
       </View>

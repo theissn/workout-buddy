@@ -41,7 +41,7 @@ function ListItem({ id, name, deleteExercise }) {
           alignItems: "flex-end",
         }}
       >
-        <Button onPress={() => deleteExercise(id)} title="🚮" />
+        <Button onPress={() => deleteExercise(id)} title="🗑" />
       </View>
     </View>
   );
