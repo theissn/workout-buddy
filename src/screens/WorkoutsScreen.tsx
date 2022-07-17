@@ -1,5 +1,7 @@
 import { format } from "date-fns";
-import { View, Text, FlatList, TouchableHighlight } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, FlatList, TouchableHighlight, Button } from "react-native";
+import { db } from "../helpers/db";
 
 interface Workout {
   id: number;
@@ -7,28 +9,15 @@ interface Workout {
   date: string;
 }
 
-const data: Workout[] = [
-  { id: 1, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 2, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 3, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 4, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 5, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 6, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 7, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 8, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 9, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 10, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 11, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 12, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 13, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 14, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 15, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 16, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 17, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 18, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 19, title: "Back", date: format(new Date(), "E do, MMM") },
-  { id: 20, title: "Back", date: format(new Date(), "E do, MMM") },
-];
+function getWorkouts(
+  setExercises: React.Dispatch<React.SetStateAction<Workout[]>>
+) {
+  db.transaction((tx) => {
+    tx.executeSql("SELECT * FROM workouts", [], (_, { rows: { _array } }) => {
+      setExercises(_array);
+    });
+  });
+}
 
 function ListItem({ id, title, date }) {
   return (
@@ -67,11 +56,28 @@ function ListItem({ id, title, date }) {
 
 const renderItem = ({ item }: any) => <ListItem {...item} />;
 
-export default function WorkoutsScreen() {
+export default function WorkoutsScreen({ navigation }) {
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+
+  useEffect(() => {
+    getWorkouts(setWorkouts);
+  }, []);
+
+  if (workouts.length === 0) {
+    return (
+      <View style={{ padding: 20 }}>
+        <Text>
+          Start your first workout by clicking the new workout button in the top
+          right hand corner
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View>
       <FlatList
-        data={data}
+        data={workouts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />

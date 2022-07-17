@@ -10,8 +10,8 @@ import AddNewExerciseModalScreen from "./src/screens/AddNewExerciseModalScreen";
 import NewWorkoutModalScreen from "./src/screens/NewWorkoutModalScreen";
 import { openDatabase } from "expo-sqlite";
 import { useEffect } from "react";
-
-const db = openDatabase("db-v2");
+import { db } from "./src/helpers/db";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 const WorkoutsStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,7 +27,7 @@ function WorkoutsStackScreen() {
             headerRight: () => (
               <Button
                 title="New"
-                onPress={() => navigation.navigate("NewWorkoutModal")}
+                onPress={() => navigation.navigate("NewWorkout")}
                 accessibilityLabel="Start new workout"
               />
             ),
@@ -47,13 +47,6 @@ function WorkoutsStackScreen() {
           component={NewWorkoutModalScreen}
           options={({ navigation, route }) => ({
             title: "Start New Workout",
-            headerLeft: () => (
-              <Button
-                title="Close"
-                onPress={() => navigation.goBack()}
-                accessibilityLabel="Go back to previous screen"
-              />
-            ),
           })}
         />
       </WorkoutsStack.Group>
@@ -118,18 +111,42 @@ export default function App() {
     db.transaction(
       (tx) => {
         tx.executeSql(`
-        CREATE TABLE IF NOT EXISTS exercises (
-          id INTEGER PRIMARY KEY NOT NULL, name TEXT
-        );
+          CREATE TABLE IF NOT EXISTS exercises (
+            id INTEGER PRIMARY KEY NOT NULL, 
+            name TEXT
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
 
-        CREATE TABLE IF NOT EXISTS routines (
-          id INTEGER PRIMARY KEY NOT NULL, name TEXT, exercises TEXT
-        );
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS routines (
+            id INTEGER PRIMARY KEY NOT NULL, 
+            name TEXT,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
 
-        CREATE TABLE IF NOT EXISTS workouts (
-          id INTEGER PRIMARY KEY NOT NULL, routineID INT, sets TEXT
-        );
-      `);
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS routine_exercises (
+            id INTEGER PRIMARY KEY NOT NULL, 
+            routineId INT,
+            exerciseId INT
+          );
+        `);
+
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS workouts (
+            id INTEGER PRIMARY KEY NOT NULL, 
+            routineId INT, 
+            sets TEXT,
+            startedAt DATETIME,
+            endedAt DATETIME,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+          );
+        `);
       },
       (err) => {
         console.log(err);
@@ -160,7 +177,7 @@ export default function App() {
         />
         <Tab.Screen
           name="Settings"
-          component={RoutinesScreen}
+          component={SettingsScreen}
           options={{
             headerShown: true,
             tabBarIcon: () => <Text>⚙️</Text>,

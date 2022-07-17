@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import {
   Button,
   FlatList,
@@ -7,34 +7,24 @@ import {
   TouchableHighlight,
   View,
 } from "react-native";
+import { db } from "../helpers/db";
 
 interface Exercise {
   id: number;
   title: string;
 }
 
-const initialExercises: Exercise[] = [
-  {
-    id: 1,
-    title: "Squats",
-  },
-  {
-    id: 2,
-    title: "Bench Press",
-  },
-  {
-    id: 3,
-    title: "Military Press",
-  },
-  {
-    id: 4,
-    title: "Deadlift",
-  },
-];
+function getRoutines(setRoutines) {
+  db.transaction((tx) => {
+    tx.executeSql("SELECT * FROM routines", [], (_, { rows: { _array } }) => {
+      setRoutines(_array);
+    });
+  });
+}
 
-function ListItem({ id, title }) {
+function ListItem({ item: { id, name }, startNewWorkout }) {
   return (
-    <TouchableHighlight onPress={() => null}>
+    <TouchableHighlight onPress={() => startNewWorkout(id)}>
       <View
         style={{
           paddingVertical: 15,
@@ -46,34 +36,30 @@ function ListItem({ id, title }) {
           borderBottomWidth: 0.25,
         }}
       >
-        <Text>{title}</Text>
+        <Text>{name}</Text>
       </View>
     </TouchableHighlight>
   );
 }
 
-const renderItem = ({ item }) => <ListItem {...item} />;
+const renderItem = (props) => <ListItem {...props} />;
 
 export default function NewWorkoutModalScreen({ navigation }) {
   const [text, onChangeText] = useState("");
-  const [exercises, setExercises] = useState(initialExercises);
+  const [routines, setRoutines] = useState([]);
+
+  useEffect(() => {
+    getRoutines(setRoutines);
+  }, []);
+
+  const startNewWorkout = (id: number) =>
+    navigation.navigate({ name: "NewWorkout", params: { id }, merge: true });
 
   return (
     <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
-      <TextInput
-        style={{
-          backgroundColor: "#fff",
-          paddingVertical: 15,
-          paddingHorizontal: 12.5,
-        }}
-        placeholder={`Filter routines...`}
-        onChangeText={onChangeText}
-        value={text}
-      />
-      <View style={{ padding: 10 }} />
       <FlatList
-        data={exercises}
-        renderItem={renderItem}
+        data={routines}
+        renderItem={({ item }) => renderItem({ item, startNewWorkout })}
         keyExtractor={(item) => item.id}
       />
     </View>

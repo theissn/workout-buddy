@@ -9,21 +9,24 @@ import {
 } from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import { openDatabase } from "expo-sqlite";
-
-const db = openDatabase("db-v2");
+import { db } from "../helpers/db";
 
 interface Exercise {
   id: number;
   title: string;
 }
 
-function ListItem({
-  id,
-  name,
-  addSelectedExercises,
-  deleteSelectedExercises,
-  deleteExercise,
-}) {
+function getExercises(
+  setExercises: React.Dispatch<React.SetStateAction<Exercise[]>>
+) {
+  db.transaction((tx) => {
+    tx.executeSql("SELECT * FROM exercises", [], (_, { rows: { _array } }) => {
+      setExercises(_array);
+    });
+  });
+}
+
+function ListItem({ id, name, updateSelectedExercises, deleteExercise }) {
   return (
     <View
       style={{
@@ -46,9 +49,7 @@ function ListItem({
         <BouncyCheckbox
           fillColor="#000"
           size={17.5}
-          onPress={(e) => addSelectedExercises(e, id)}
-          // onPressIn={() => addSelectedExercises(id)}
-          // onPressOut={() => deleteSelectedExercises(id)}
+          onPress={(e) => updateSelectedExercises(e, id)}
         />
         <Text>{name}</Text>
       </View>
@@ -64,109 +65,67 @@ function ListItem({
   );
 }
 
-const renderItem = ({
-  item,
-  addSelectedExercises,
-  deleteSelectedExercises,
-  deleteExercise,
-}) => (
+const renderItem = ({ item, updateSelectedExercises, deleteExercise }) => (
   <ListItem
     {...item}
-    addSelectedExercises={addSelectedExercises}
-    deleteSelectedExercises={deleteSelectedExercises}
+    updateSelectedExercises={updateSelectedExercises}
     deleteExercise={deleteExercise}
   />
 );
 
 export default function AddNewExerciseModalScreen({ navigation }) {
-  const [text, onChangeText] = useState("");
-  const [exercises, setExercises] = useState([]);
-  const [selected, setSelected] = useState([]);
+  const [text, onChangeText] = useState<string>("");
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [selected, setSelected] = useState<Array<number>>([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <Button
           title="Save"
-          onPress={() => console.log(selected)}
+          onPress={saveSelectedExercisesToRoutine}
           accessibilityLabel="Go back to previous screen"
         />
       ),
     });
-  }, [navigation]);
+  }, [navigation, selected]);
 
-  db.transaction((tx) => {
-    tx.executeSql("SELECT * FROM exercises", [], (_, { rows }) =>
-      setExercises(rows._array)
-    );
-  });
+  useEffect(() => {
+    getExercises(setExercises);
+  }, []);
+
+  const saveSelectedExercisesToRoutine = () => {
+    navigation.navigate({
+      name: "NewRoutine",
+      params: {
+        selected: selected.map((id) =>
+          exercises.find((exercise) => exercise.id === id)
+        ),
+      },
+      merge: true,
+    });
+  };
 
   const addExercise = () => {
     db.transaction((tx) => {
-      tx.executeSql(
-        `INSERT INTO exercises (name) VALUES (?)`,
-        [text],
-        (tx, res) => {
-          console.log(res);
-        }
-      );
-
-      tx.executeSql(
-        `SELECT * FROM exercises`,
-        [],
-        (err, res) => {
-          setExercises(res.rows._array);
-        },
-        (err) => console.log(err)
-      );
+      tx.executeSql(`INSERT INTO exercises (name) VALUES (?)`, [text]);
     });
 
-    // setExercises([...exercises, { id: Date.now(), title: text }]);
+    getExercises(setExercises);
   };
 
-  const addSelectedExercises = (action: boolean, id: number) => {
-    if (action) {
-      setSelected([...selected, id]);
-      return;
-    }
-
+  const updateSelectedExercises = (action: boolean, id: number) => {
     const set = new Set(selected);
-    set.delete(id);
+    action ? set.add(id) : set.delete(id);
     setSelected([...set]);
-  };
-
-  const deleteSelectedExercises = (id: number) => {
-    const set = new Set(selected);
-    set.delete(id);
-
-    setSelected([...set]);
-    // setSelectedExercises(
-    //   selectedExercises.filter((exercise) => exercise.id !== id)
-    // );
   };
 
   const deleteExercise = (id: number) => {
     db.transaction((tx) => {
-      tx.executeSql(
-        `DELETE FROM exercises WHERE id = ?`,
-        [id],
-        (tx, res) => {
-          console.log(res);
-        },
-        (err) => console.log(err)
-      );
-
-      console.log(id);
-
-      tx.executeSql(
-        `SELECT * FROM exercises`,
-        [],
-        (err, res) => {
-          setExercises(res.rows._array);
-        },
-        (err) => console.log(err)
-      );
+      tx.executeSql(`DELETE FROM exercises WHERE id = ?`, [id]);
     });
+
+    getExercises(setExercises);
   };
 
   return (
@@ -191,8 +150,7 @@ export default function AddNewExerciseModalScreen({ navigation }) {
         renderItem={({ item }) =>
           renderItem({
             item,
-            addSelectedExercises,
-            deleteSelectedExercises,
+            updateSelectedExercises,
             deleteExercise,
           })
         }
