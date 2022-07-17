@@ -21,7 +21,7 @@ function getWorkouts(
 ) {
   db.transaction((tx) => {
     tx.executeSql(
-      "SELECT w.*, r.name FROM workouts w LEFT JOIN routines r ON r.id = w.routineId",
+      "SELECT w.*, r.name FROM workouts w LEFT JOIN routines r ON r.id = w.routineId ORDER BY w.startedAt DESC",
       [],
       (_, { rows: { _array } }) => {
         setExercises(_array);
