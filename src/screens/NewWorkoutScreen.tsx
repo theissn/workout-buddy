@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
   Button,
+  KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
   Text,
@@ -174,34 +175,36 @@ export default function NewWorkoutScreen({ route, navigation }) {
   }
 
   return (
-    <ScrollView>
-      <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
-        <Text style={{ fontSize: 30 }}>{routine.name}</Text>
-        <View
-          style={{
-            borderBottomColor: "#000",
-            width: 35,
-            borderBottomWidth: 1,
-            paddingTop: 5,
-          }}
-        />
-        <Text style={{ fontSize: 20, paddingTop: 10, fontWeight: "300" }}>
-          {format(startedAt, "do MMM, H:mm")}
-        </Text>
-        {exercises.map((exercise, index) => (
-          <View key={exercise.id}>
-            <View style={{ paddingTop: 30 }} />
-            <Text style={{ fontSize: 20 }}>{exercise.name}</Text>
-            <View style={{ paddingTop: 10 }} />
-            {sets[index] && (
-              <SetTracker
-                sets={sets[index]}
-                handleSetUpdate={(sets) => handleSetUpdate(index, sets)}
-              />
-            )}
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+    <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={100}>
+      <ScrollView>
+        <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
+          <Text style={{ fontSize: 30 }}>{routine.name}</Text>
+          <View
+            style={{
+              borderBottomColor: "#000",
+              width: 35,
+              borderBottomWidth: 1,
+              paddingTop: 5,
+            }}
+          />
+          <Text style={{ fontSize: 20, paddingTop: 10, fontWeight: "300" }}>
+            {format(startedAt, "do MMM, H:mm")}
+          </Text>
+          {exercises.map((exercise, index) => (
+            <View key={exercise.id}>
+              <View style={{ paddingTop: 30 }} />
+              <Text style={{ fontSize: 20 }}>{exercise.name}</Text>
+              <View style={{ paddingTop: 10 }} />
+              {sets[index] && (
+                <SetTracker
+                  sets={sets[index]}
+                  handleSetUpdate={(sets) => handleSetUpdate(index, sets)}
+                />
+              )}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

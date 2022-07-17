@@ -16,6 +16,7 @@
     "date-fns": "^2.28.0",
     "expo": "~45.0.0",
     "expo-asset": "~8.5.0",
+    "expo-document-picker": "~10.2.1",
     "expo-file-system": "~14.0.0",
     "expo-sharing": "~10.2.0",
     "expo-sqlite": "~10.2.0",

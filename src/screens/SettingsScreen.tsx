@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
+import * as DocumentPicker from "expo-document-picker";
 import {
   ActivityIndicator,
   Alert,
@@ -83,6 +84,16 @@ export default function SettingsScreen({ navigation, route }) {
     });
   };
 
+  const importDB = async () => {
+    Alert.alert("Coming soon...");
+
+    return;
+
+    DocumentPicker.getDocumentAsync({
+      type: "json",
+    });
+  };
+
   if (isLoading) {
     return (
       <View
@@ -104,6 +115,8 @@ export default function SettingsScreen({ navigation, route }) {
       }}
     >
       <SettingsButton text="Share DB" action={shareDB} />
+      <View style={{ paddingTop: 10 }} />
+      <SettingsButton text="Import DB" action={importDB} />
       <View style={{ paddingTop: 10 }} />
       <SettingsButton text="Delete DB" action={deleteDB} />
     </View>

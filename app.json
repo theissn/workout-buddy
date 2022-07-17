@@ -14,12 +14,11 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.theisnielsen.workout-buddy"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.theisnielsen.workout-buddy",
+      "usesIcloudStorage": true
     },
     "android": {
       "adaptiveIcon": {

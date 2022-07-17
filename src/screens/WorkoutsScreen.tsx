@@ -122,7 +122,7 @@ export default function WorkoutsScreen({ navigation, route }) {
   }
 
   return (
-    <View>
+    <View style={{ paddingHorizontal: 15, paddingVertical: 25 }}>
       <FlatList
         data={workouts}
         renderItem={({ item }) =>
