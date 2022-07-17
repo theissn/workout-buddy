@@ -1,5 +1,6 @@
-import { openDatabase } from "expo-sqlite";
 import { useState } from "react";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
 import {
   ActivityIndicator,
   Alert,
@@ -8,6 +9,25 @@ import {
   View,
 } from "react-native";
 import { db } from "../helpers/db";
+
+const SettingsButton = ({ action, text }) => (
+  <TouchableHighlight
+    onPress={action}
+    style={{
+      width: "100%",
+      backgroundColor: "#000",
+      padding: 10,
+    }}
+  >
+    <Text
+      style={{
+        color: "#fff",
+      }}
+    >
+      {text}
+    </Text>
+  </TouchableHighlight>
+);
 
 export default function SettingsScreen({ navigation, route }) {
   const [isLoading, setLoading] = useState(false);
@@ -33,6 +53,36 @@ export default function SettingsScreen({ navigation, route }) {
     ]);
   };
 
+  const fetchTableFromDB = (table: string) => {
+    return new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(`SELECT * FROM ${table}`, [], (_, { rows }) => {
+          resolve(rows._array);
+        });
+      });
+    });
+  };
+
+  const shareDB = async () => {
+    const data = JSON.stringify({
+      exercises: await fetchTableFromDB("exercises"),
+      routines: await fetchTableFromDB("routines"),
+      routine_exercises: await fetchTableFromDB("routine_exercises"),
+      workouts: await fetchTableFromDB("workouts"),
+      workouts_exercises: await fetchTableFromDB("workouts_exercises"),
+    });
+
+    await FileSystem.writeAsStringAsync(
+      FileSystem.documentDirectory + "/db.json",
+      data,
+      { encoding: "utf8" }
+    );
+
+    await Sharing.shareAsync(FileSystem.documentDirectory + "/db.json", {
+      dialogTitle: "Share Database File",
+    });
+  };
+
   if (isLoading) {
     return (
       <View
@@ -53,22 +103,9 @@ export default function SettingsScreen({ navigation, route }) {
         padding: 20,
       }}
     >
-      <TouchableHighlight
-        onPress={deleteDB}
-        style={{
-          width: "100%",
-          backgroundColor: "#000",
-          padding: 10,
-        }}
-      >
-        <Text
-          style={{
-            color: "#fff",
-          }}
-        >
-          Delete DB
-        </Text>
-      </TouchableHighlight>
+      <SettingsButton text="Share DB" action={shareDB} />
+      <View style={{ paddingTop: 10 }} />
+      <SettingsButton text="Delete DB" action={deleteDB} />
     </View>
   );
 }
