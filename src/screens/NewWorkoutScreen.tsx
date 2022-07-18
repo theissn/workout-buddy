@@ -166,6 +166,17 @@ export default function NewWorkoutScreen({ route, navigation }) {
     setSets(exercises.map((e) => [{ weight: "0", reps: "0" }]));
   }, [exercises]);
 
+  const updateSets = (value: number) => {
+    setSets(
+      sets.map((set, index) =>
+        set.map((s) => ({
+          ...s,
+          weight: (parseInt(s.weight) + value).toString(),
+        }))
+      )
+    );
+  };
+
   if (isLoading || !routine || !exercises) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -193,8 +204,37 @@ export default function NewWorkoutScreen({ route, navigation }) {
           {exercises.map((exercise, index) => (
             <View key={exercise.id}>
               <View style={{ paddingTop: 30 }} />
-              <Text style={{ fontSize: 20 }}>{exercise.name}</Text>
-              <View style={{ paddingTop: 10 }} />
+              <View
+                style={{
+                  backgroundColor: "#14213d",
+                  paddingVertical: 10,
+                  paddingHorizontal: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontSize: 20, flex: 1, color: "#fff" }}>
+                  {exercise.name}
+                </Text>
+                <View
+                  style={{
+                    flex: 0.9,
+                    flexDirection: "row",
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <Button
+                    onPress={() => updateSets(-2.5)}
+                    color="#fff"
+                    title="- 2.5 kg"
+                  />
+                  <Button
+                    onPress={() => updateSets(2.5)}
+                    color="#fff"
+                    title="+ 2.5 kg"
+                  />
+                </View>
+              </View>
               {sets[index] && (
                 <SetTracker
                   sets={sets[index]}
